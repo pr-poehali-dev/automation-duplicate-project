@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Generate landing page",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "description": "Создай лендинг для кофейни в минималистичном стиле"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "template": {
+          "name": "string"
+        },
+        "status": "ready"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate ecommerce site",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "description": "Интернет-магазин одежды с каталогом и корзиной"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "template": {
+          "name": "Интернет-магазин"
+        },
+        "status": "ready"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

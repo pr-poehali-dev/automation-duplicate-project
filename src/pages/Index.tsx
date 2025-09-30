@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,43 +7,81 @@ import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Icon from '@/components/ui/icon';
 
+interface GeneratedTemplate {
+  name: string;
+  sections: string[];
+  colors: string[];
+  preview_url: string;
+}
+
+interface GenerateResponse {
+  template: GeneratedTemplate;
+  estimated_time: number;
+  components_count: number;
+  status: string;
+}
+
 const Index = () => {
   const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedTemplate, setGeneratedTemplate] = useState<GenerateResponse | null>(null);
+  const { toast } = useToast();
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!description.trim()) return;
+    
     setIsGenerating(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/4733bf08-58be-4de9-8c5b-f3df13d77c6c', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description, style: 'modern' })
+      });
+      
+      const data: GenerateResponse = await response.json();
+      setGeneratedTemplate(data);
+      
+      toast({
+        title: '✨ Сайт сгенерирован!',
+        description: `Шаблон "${data.template.name}" готов за ${data.estimated_time} секунд`,
+      });
+    } catch (error) {
+      toast({
+        title: '❌ Ошибка',
+        description: 'Не удалось сгенерировать сайт. Попробуйте еще раз.',
+        variant: 'destructive'
+      });
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 transition-all duration-300">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Icon name="Sparkles" className="text-primary" size={28} />
+          <div className="flex items-center gap-2 group cursor-pointer">
+            <Icon name="Sparkles" className="text-primary group-hover:rotate-12 transition-transform duration-300" size={28} />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               AI Builder
             </span>
           </div>
           <div className="hidden md:flex items-center gap-6">
-            <a href="#constructor" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#constructor" className="text-sm font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">
               Конструктор
             </a>
-            <a href="#examples" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#examples" className="text-sm font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">
               Примеры
             </a>
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">
               Тарифы
             </a>
-            <a href="#faq" className="text-sm font-medium hover:text-primary transition-colors">
+            <a href="#faq" className="text-sm font-medium hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full">
               FAQ
             </a>
-            <Button size="sm">Войти</Button>
+            <Button size="sm" className="hover:scale-105 transition-transform">Войти</Button>
           </div>
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="ghost" size="icon" className="md:hidden hover:rotate-90 transition-transform">
             <Icon name="Menu" size={24} />
           </Button>
         </div>
@@ -63,12 +102,12 @@ const Index = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Искусственный интеллект превратит твою идею в готовый сайт. Без кода. Без дизайнера. Просто опиши что нужно.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="gap-2">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+            <Button size="lg" className="gap-2 hover:scale-105 transition-transform">
               <Icon name="Rocket" size={18} />
               Начать бесплатно
             </Button>
-            <Button size="lg" variant="outline" className="gap-2">
+            <Button size="lg" variant="outline" className="gap-2 hover:scale-105 transition-transform">
               <Icon name="Play" size={18} />
               Смотреть демо
             </Button>
@@ -136,6 +175,70 @@ const Index = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {generatedTemplate && (
+            <Card className="border-primary border-2 animate-scale-in">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="CheckCircle2" className="text-secondary" size={24} />
+                  Сайт сгенерирован!
+                </CardTitle>
+                <CardDescription>
+                  Шаблон готов к использованию. Можешь сразу начать редактирование.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Шаблон</h3>
+                      <p className="text-lg">{generatedTemplate.template.name}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Разделы ({generatedTemplate.components_count})</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {generatedTemplate.template.sections.map((section, idx) => (
+                          <Badge key={idx} variant="secondary">{section}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Цветовая схема</h3>
+                      <div className="flex gap-2">
+                        {generatedTemplate.template.colors.map((color, idx) => (
+                          <div
+                            key={idx}
+                            className="w-12 h-12 rounded-lg border-2 border-border"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Превью</h3>
+                    <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-border bg-muted">
+                      <img
+                        src={generatedTemplate.template.preview_url}
+                        alt="Template preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button className="flex-1 gap-2">
+                    <Icon name="ExternalLink" size={18} />
+                    Открыть редактор
+                  </Button>
+                  <Button variant="outline" className="gap-2">
+                    <Icon name="Download" size={18} />
+                    Скачать
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
 
@@ -156,18 +259,23 @@ const Index = () => {
               { title: 'SaaS продукт', desc: 'Тарифы и демо', icon: 'Laptop' },
               { title: 'Агентство маркетинга', desc: 'Кейсы и команда', icon: 'TrendingUp' },
             ].map((example, idx) => (
-              <Card key={idx} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Icon name={example.icon as any} className="text-white" size={24} />
+              <Card key={idx} className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden cursor-pointer">
+                <div className="relative h-48 bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary opacity-0 group-hover:opacity-10 transition-opacity duration-500" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center group-hover:scale-125 transition-all duration-500 shadow-lg">
+                      <Icon name={example.icon as any} className="text-white" size={36} />
+                    </div>
                   </div>
-                  <CardTitle className="text-lg">{example.title}</CardTitle>
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors">{example.title}</CardTitle>
                   <CardDescription>{example.desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button variant="ghost" className="w-full gap-2 group/btn">
                     Посмотреть
-                    <Icon name="ArrowRight" size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                    <Icon name="ArrowRight" size={16} className="group-hover/btn:translate-x-2 transition-transform" />
                   </Button>
                 </CardContent>
               </Card>
@@ -205,8 +313,8 @@ const Index = () => {
             ].map((plan, idx) => (
               <Card
                 key={idx}
-                className={`relative ${
-                  plan.popular ? 'border-primary border-2 shadow-xl scale-105' : ''
+                className={`relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                  plan.popular ? 'border-primary border-2 shadow-xl md:scale-105' : ''
                 }`}
               >
                 {plan.popular && (
